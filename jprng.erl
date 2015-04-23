@@ -12,13 +12,13 @@
 -define(JAVA_MASK, 281474976710655).
 
 %% Java uniquifier value.
--define(JAVA_UNIFIER, 8682522807148012).
+-define(JAVA_UNIQUIFIER, 8682522807148012).
 
 nano_time()->
   nano_time(now()).
 
 nano_time({M,S,Ms})->
-  ((M*1000000+S)*1000+MS)*1000000.
+  ((M*1000000+S)*1000+Ms)*1000000.
 
 reduce_val(B,V,N,S)->
   if
@@ -39,6 +39,7 @@ rand(Seed)->
   receive
     {From, init}->
       Seed2 = (Seed bxor ?JAVA_MULTIPLIER) band ?JAVA_MASK,
+      From ! {self(), Seed2},
       rand(Seed2);
     {From, next, B}->
       Seed2 = (Seed * ?JAVA_MULTIPLIER + ?JAVA_ADDEND) band ?JAVA_MASK,
@@ -58,10 +59,10 @@ rand(Seed)->
           From ! {self(), Value},
           rand(Seed2);
         true->
-          Seed2 = (Seed * ?JAVA_MULTIPLIER + ?JAVA_ADDEND) band ?JAVA_MASK,
-          Bits  = (Seed2 bsr (48-31)),
-          TValu = (Bits rem N),
-          {Value, NewSeed} = reduce_val(Bits,Value,N,Seed2),
+          Seed2  = (Seed * ?JAVA_MULTIPLIER + ?JAVA_ADDEND) band ?JAVA_MASK,
+          Bits   = (Seed2 bsr (48-31)),
+          TValue = (Bits rem N),
+          {Value, NewSeed} = reduce_val(Bits,TValue,N,Seed2),
           From ! {self(), Value},
           rand(NewSeed)
       end
